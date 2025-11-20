@@ -55,7 +55,7 @@ export default function IssuesPage() {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [statusFilter, setStatusFilter] = useState<(typeof statuses)[number]>("all");
   const [loading, setLoading] = useState(false);
-  const [activeIssue, setActiveIssue] = useState<Issue | null>(null);
+  const [expandedIssueId, setExpandedIssueId] = useState<string | null>(null);
 
   const loadIssues = useCallback(async () => {
     setLoading(true);
@@ -89,9 +89,10 @@ export default function IssuesPage() {
       console.error(error);
     }
     await loadIssues();
-    if (activeIssue?.id === id) {
-      setActiveIssue(null);
-    }
+  }
+
+  function toggleIssue(id: string) {
+    setExpandedIssueId(expandedIssueId === id ? null : id);
   }
 
   return (
@@ -102,7 +103,7 @@ export default function IssuesPage() {
             <p className="text-xs uppercase tracking-widest text-blue-500">Site Scanner</p>
             <h1 className="text-3xl font-semibold text-slate-900">Issue Queue</h1>
             <p className="text-sm text-slate-500">
-              Approve or reject issues before the worker picks them up.
+              Click any issue to expand and view details.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -135,177 +136,169 @@ export default function IssuesPage() {
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-        <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-md">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-slate-50 text-left text-xs uppercase tracking-widest text-slate-400">
-                <th className="px-4 py-3">Title</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Source</th>
-                <th className="px-4 py-3">PR</th>
-                <th className="px-4 py-3 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {issues.map(issue => (
-                <tr
-                  key={issue.id}
-                  className={`border-t text-slate-700 transition hover:bg-slate-50 ${
-                    activeIssue?.id === issue.id ? "bg-blue-50/60" : "bg-white"
-                  }`}
-                >
-                  <td className="px-4 py-3">
+      <div className="space-y-3">
+        {issues.length === 0 && !loading && (
+          <div className="rounded-2xl border border-slate-100 bg-white p-8 text-center text-slate-400 shadow-md">
+            No issues for this filter.
+          </div>
+        )}
+        {issues.map(issue => {
+          const isExpanded = expandedIssueId === issue.id;
+          return (
+            <div
+              key={issue.id}
+              className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-md transition-all"
+            >
+              {/* Accordion Header */}
+              <div
+                className={`flex cursor-pointer items-center justify-between gap-4 p-4 transition-colors hover:bg-slate-50 ${
+                  isExpanded ? "bg-blue-50/60" : ""
+                }`}
+                onClick={() => toggleIssue(issue.id)}
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
                     <div className="font-medium text-slate-900">{issue.title}</div>
-                    <p className="text-xs text-slate-400">
-                      {issue.created_at
-                        ? new Date(issue.created_at).toLocaleString()
-                        : "Unknown date"}
-                    </p>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs uppercase text-slate-500">
-                    {issue.status}
-                  </td>
-                  <td className="px-4 py-3">
-                    {issue.source_url ? (
-                      <a
-                        href={issue.source_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-600 underline"
-                      >
-                        View page
-                      </a>
-                    ) : (
-                      <span className="text-slate-300">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {issue.pr_url ? (
-                      <a
-                        href={issue.pr_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-600 underline"
-                      >
-                        PR link
-                      </a>
-                    ) : (
-                      <span className="text-slate-300">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap items-center justify-center gap-2">
-                      <button
-                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-slate-400"
-                        onClick={() => setActiveIssue(issue)}
-                      >
-                        Details
-                      </button>
+                    <span className="rounded-full bg-slate-100 px-2.5 py-0.5 font-mono text-xs uppercase text-slate-600">
+                      {issue.status}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {issue.created_at
+                      ? new Date(issue.created_at).toLocaleString()
+                      : "Unknown date"}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {issue.source_url && (
+                    <a
+                      href={issue.source_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-blue-600 transition hover:border-blue-300 hover:bg-blue-50"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      View Page
+                    </a>
+                  )}
+                  {issue.pr_url && (
+                    <a
+                      href={issue.pr_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-blue-600 transition hover:border-blue-300 hover:bg-blue-50"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      PR Link
+                    </a>
+                  )}
+                  
+                  {/* Expand/Collapse Icon */}
+                  <svg
+                    className={`h-5 w-5 text-slate-400 transition-transform ${
+                      isExpanded ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Accordion Content */}
+              {isExpanded && (
+                <div className="border-t border-slate-100 bg-slate-50/50 p-6">
+                  <div className="grid gap-6 lg:grid-cols-2">
+                    {/* Left Column - Details */}
+                    <div className="space-y-4">
+                      <div>
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                          Description
+                        </p>
+                        <p className="whitespace-pre-wrap rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
+                          {stripCitations(issue.description) || "No description provided."}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                          Manual Instructions
+                        </p>
+                        <p className="whitespace-pre-wrap rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
+                          {issue.manual_instructions || "None supplied."}
+                        </p>
+                      </div>
+                      {issue.status === "failed" && issue.error_message && (
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-red-600">
+                            Error Message
+                          </p>
+                          <p className="whitespace-pre-wrap text-sm text-red-800">
+                            {issue.error_message}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right Column - Actions */}
+                    <div className="flex flex-col gap-3">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        Actions
+                      </p>
                       {issue.status === "reported" && (
-                        <>
+                        <div className="flex flex-col gap-2">
                           <button
-                            className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-600"
-                            onClick={() => handle("approve", issue.id)}
+                            className="w-full rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
+                            onClick={e => {
+                              e.stopPropagation();
+                              handle("approve", issue.id);
+                            }}
                           >
-                            Approve
+                            ✓ Approve Issue
                           </button>
                           <button
-                            className="rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-red-600"
-                            onClick={() => handle("reject", issue.id)}
+                            className="w-full rounded-lg bg-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-600"
+                            onClick={e => {
+                              e.stopPropagation();
+                              handle("reject", issue.id);
+                            }}
                           >
-                            Reject
+                            ✕ Reject Issue
                           </button>
-                        </>
+                        </div>
                       )}
                       {issue.status === "failed" && (
                         <button
-                          className="rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-amber-600"
-                          onClick={() => handle("approve", issue.id)}
+                          className="w-full rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600"
+                          onClick={e => {
+                            e.stopPropagation();
+                            handle("approve", issue.id);
+                          }}
                         >
-                          Re-approve
+                          ↻ Re-approve Issue
                         </button>
                       )}
+                      {issue.status !== "reported" && issue.status !== "failed" && (
+                        <div className="rounded-lg border border-slate-200 bg-white p-4 text-center">
+                          <p className="text-sm text-slate-500">
+                            No actions available for {issue.status} issues.
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  </td>
-                </tr>
-              ))}
-              {issues.length === 0 && !loading && (
-                <tr>
-                  <td className="px-4 py-8 text-center text-slate-400" colSpan={5}>
-                    No issues for this filter.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <aside className="rounded-2xl border border-white/70 bg-white/90 p-5 shadow-md backdrop-blur">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">Issue Details</h2>
-            {activeIssue && (
-              <button
-                className="text-sm text-slate-400 hover:text-slate-600"
-                onClick={() => setActiveIssue(null)}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-          {activeIssue ? (
-            <div className="mt-4 space-y-4 text-sm text-slate-600">
-              <div>
-                <p className="text-xs uppercase text-slate-400">Title</p>
-                <p className="font-medium text-slate-900">{activeIssue.title}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase text-slate-400">Description</p>
-                <p className="whitespace-pre-wrap">{stripCitations(activeIssue.description) || "No description provided."}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase text-slate-400">Manual instructions</p>
-                <p className="whitespace-pre-wrap">
-                  {activeIssue.manual_instructions || "None supplied."}
-                </p>
-              </div>
-              {activeIssue.status === "failed" && activeIssue.error_message && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                  <p className="text-xs uppercase text-red-600">Error Message</p>
-                  <p className="mt-1 whitespace-pre-wrap text-xs text-red-800">
-                    {activeIssue.error_message}
-                  </p>
+                  </div>
                 </div>
               )}
-              <div className="flex gap-2">
-                {activeIssue.source_url && (
-                  <a
-                    href={activeIssue.source_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-blue-600"
-                  >
-                    View Source
-                  </a>
-                )}
-                {activeIssue.pr_url && (
-                  <a
-                    href={activeIssue.pr_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-blue-600"
-                  >
-                    Open PR
-                  </a>
-                )}
-              </div>
             </div>
-          ) : (
-            <p className="mt-6 text-sm text-slate-400">
-              Select an issue from the table to preview its description and instructions.
-            </p>
-          )}
-        </aside>
+          );
+        })}
       </div>
     </div>
   );
