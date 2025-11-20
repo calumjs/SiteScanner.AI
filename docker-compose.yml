@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  scanner:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: ["npm", "run", "scanner"]
+    environment:
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      SITE_URL: ${SITE_URL}
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: ["npm", "run", "worker"]
+    environment:
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      WORKER_ID: worker-1
+      REPO_DIR: /repo
+      BASE_BRANCH: main
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      GH_TOKEN: ${GITHUB_TOKEN}
+      TARGET_REPO_URL: ${TARGET_REPO_URL}
+      GIT_COMMITTER_NAME: "Codex Bot"
+      GIT_COMMITTER_EMAIL: codex-bot@example.com
+      GIT_AUTHOR_NAME: "Codex Bot"
+      GIT_AUTHOR_EMAIL: codex-bot@example.com
+      CURSOR_MCP_CONFIG_PATH: /workspace/.cursor/mcp.json
+      CODEX_MCP_CONFIG_PATH: /workspace/.cursor/mcp.json
+    volumes:
+      - ./site-repo:/repo:rw
+      - ./.cursor:/workspace/.cursor:ro
+

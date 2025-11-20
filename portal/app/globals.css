@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+:root {
+  --background: linear-gradient(135deg, #f4f7fb, #e8efff);
+  --foreground: #111827;
+}
+
+@theme inline {
+  --color-background: #ffffff;
+  --color-foreground: var(--foreground);
+  --font-sans: "Inter", var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-image: var(--background);
+  background-attachment: fixed;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}

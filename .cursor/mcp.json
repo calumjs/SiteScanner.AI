@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest",
+        "--browser",
+        "firefox"
+      ],
+      "env": {
+        "PLAYWRIGHT_BROWSERS_PATH": "/ms-playwright",
+        "NODE_OPTIONS": "--enable-source-maps"
+      }
+    }
+  }
+}
+

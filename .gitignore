@@ -1,0 +1,13 @@
+node_modules
+.env
+.env.local
+*.log
+.next
+dist
+site-repo/*
+!site-repo/.gitkeep
+portal/.env.local
+portal/.next
+portal/node_modules
+backend/node_modules
+
